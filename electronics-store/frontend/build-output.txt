@@ -1,0 +1,30 @@
+
+> electronics-store-frontend@1.0.0 build
+> vite build
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+../../../../../../C:/Users/Amos Wainaina/JM Enterprises/electronics-store/frontend-react/node_modules/react-hot-toast/dist/index.mjs (1:0): Module level directives cause errors when bundled, "use client" in "../../../../../../C:/Users/Amos Wainaina/JM Enterprises/electronics-store/frontend-react/node_modules/react-hot-toast/dist/index.mjs" was ignored.
+[32m✓[39m 517 modules transformed.
+[31mx[39m Build failed in 4.02s
+[31merror during build:
+[31m../../../../../../C:/Users/Amos Wainaina/JM Enterprises/electronics-store/frontend-react/src/components/shop/ProductGrid.jsx (6:7): "default" is not exported by "../../../../../../C:/Users/Amos Wainaina/JM Enterprises/electronics-store/frontend-react/src/components/shop/QuickViewModal.jsx", imported by "../../../../../../C:/Users/Amos Wainaina/JM Enterprises/electronics-store/frontend-react/src/components/shop/ProductGrid.jsx".[31m
+file: [36mC:/Users/Amos Wainaina/JM Enterprises/electronics-store/frontend-react/src/components/shop/ProductGrid.jsx:6:7[31m
+[33m
+4: import { API_URL } from '../../services/api';
+5: import ProductCard from '../common/ProductCard';
+6: import QuickViewModal from './QuickViewModal';
+          ^
+7: 
+8: const ProductGrid = ({
+[31m
+    at getRollupError (file:///c:/Users/Amos%20Wainaina/JM%20Enterprises/electronics-store/frontend-react/node_modules/rollup/dist/es/shared/parseAst.js:406:41)
+    at error (file:///c:/Users/Amos%20Wainaina/JM%20Enterprises/electronics-store/frontend-react/node_modules/rollup/dist/es/shared/parseAst.js:402:42)
+    at Module.error (file:///c:/Users/Amos%20Wainaina/JM%20Enterprises/electronics-store/frontend-react/node_modules/rollup/dist/es/shared/node-entry.js:17390:16)
+    at Module.traceVariable (file:///c:/Users/Amos%20Wainaina/JM%20Enterprises/electronics-store/frontend-react/node_modules/rollup/dist/es/shared/node-entry.js:17823:29)
+    at ModuleScope.findVariable (file:///c:/Users/Amos%20Wainaina/JM%20Enterprises/electronics-store/frontend-react/node_modules/rollup/dist/es/shared/node-entry.js:15413:39)
+    at ReturnValueScope.findVariable (file:///c:/Users/Amos%20Wainaina/JM%20Enterprises/electronics-store/frontend-react/node_modules/rollup/dist/es/shared/node-entry.js:5682:38)
+    at FunctionBodyScope.findVariable (file:///c:/Users/Amos%20Wainaina/JM%20Enterprises/electronics-store/frontend-react/node_modules/rollup/dist/es/shared/node-entry.js:5682:38)
+    at Identifier.bind (file:///c:/Users/Amos%20Wainaina/JM%20Enterprises/electronics-store/frontend-react/node_modules/rollup/dist/es/shared/node-entry.js:5449:40)
+    at CallExpression.bind (file:///c:/Users/Amos%20Wainaina/JM%20Enterprises/electronics-store/frontend-react/node_modules/rollup/dist/es/shared/node-entry.js:2827:28)
+    at CallExpression.bind (file:///c:/Users/Amos%20Wainaina/JM%20Enterprises/electronics-store/frontend-react/node_modules/rollup/dist/es/shared/node-entry.js:12522:15)[39m
