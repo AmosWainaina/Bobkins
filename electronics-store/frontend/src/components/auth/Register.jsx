@@ -1,64 +1,156 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { apiClient } from '../../services/api';
-import toast from 'react-hot-toast';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import toast from "react-hot-toast";
+import { FiUser, FiSmartphone, FiUserPlus } from "react-icons/fi";
+import { apiClient } from "../../services/api";
 
-const Register = () => {
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(false);
+
+
+const RegisterPage = () => {
+  const [formData, setFormData] = useState({
+    full_name: "",
+    phone: ""
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    if (!fullName || !phone) return toast.error('Please provide name and phone');
-    setLoading(true);
+    
+    if (!formData.full_name || !formData.phone) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (formData.full_name.trim().length < 2) {
+      toast.error("Please enter your full name");
+      return;
+    }
+
+    const phoneRegex = /^[0-9]{10,15}$/;
+    if (!phoneRegex.test(formData.phone.replace(/[^0-9]/g, ''))) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      const res = await apiClient.post('/accounts/otp/send/', { phone, full_name: fullName });
+      const res = await apiClient.post('/accounts/otp/send/', { 
+        phone: formData.phone, 
+        full_name: formData.full_name 
+      });
+      
       if (res.data?.requires_verification) {
-        toast.success('OTP sent');
-        navigate('/verify-otp', { state: { phone } });
+        toast.success('OTP sent successfully!');
+        navigate('/verify-otp', { state: { phone: formData.phone, full_name: formData.full_name } });
       } else {
-        toast.error('Failed to send OTP');
+        toast.error('Failed to send OTP. Please try again.');
       }
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.error || 'Registration failed');
+      toast.error(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-      <div className="w-full max-w-md rounded-3xl bg-white dark:bg-gray-800 p-8 shadow-xl">
-        <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Register</h1>
-        <p className="text-gray-600 dark:text-gray-300 mb-6">Create an account to start shopping.</p>
-        <form onSubmit={handleRegister} className="space-y-4">
-          <input
-            type="text"
-            placeholder="Full name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-900"
-          />
-          <input
-            type="tel"
-            placeholder="Phone number"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-900"
-          />
-          <button disabled={loading} className="w-full rounded-xl bg-blue-600 text-white py-3 font-semibold">
-            {loading ? 'Sending...' : 'Register & Send OTP'}
-          </button>
-        </form>
-        <p className="mt-6 text-sm text-gray-500 dark:text-gray-400">
-          Already have an account? <Link to="/login" className="text-blue-600">Login</Link>
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
+            <p className="mt-2 text-gray-600">Join us with your phone number</p>
+          </div>
+
+          <form onSubmit={handleRegister} className="space-y-6">
+            <div>
+              <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-2">
+                Full Name
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiUser className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="full_name"
+                  name="full_name"
+                  type="text"
+                  required
+                  value={formData.full_name}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Enter your full name"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                Phone Number
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiSmartphone className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Enter your phone number"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                We'll send a verification code to this number
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              {isLoading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Sending OTP...
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <FiUserPlus className="mr-2" />
+                  Register & Send OTP
+                </div>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link 
+                to="/login" 
+                className="font-medium text-green-600 hover:text-green-500 transition-colors duration-200"
+              >
+                Sign in here
+              </Link>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default RegisterPage;
