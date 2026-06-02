@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { store } from './store/store';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
+import ProtectedRoute from './components/common/ProtectedRoute';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import ProductDetails from './pages/ProductDetails';
@@ -14,7 +15,6 @@ import Dashboard from './pages/Dashboard';
 import Login from './components/auth/Login';
 import OTPVerification from './components/auth/OTPVerification';
 import Register from './components/auth/Register';
-import ProtectedRoute from './components/common/ProtectedRoute';
 
 function App() {
   return (
@@ -24,15 +24,40 @@ function App() {
           <Navbar />
           <main>
             <Routes>
+              {/* Public Routes */}
               <Route path="/" element={<Home />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/product/:slug" element={<ProductDetails />} />
-              <Route path="/cart" element={<Cart />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/verify-otp" element={<OTPVerification />} />
-              <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              
+              {/* Protected User Routes */}
+              <Route path="/shop" element={
+                <ProtectedRoute>
+                  <Shop />
+                </ProtectedRoute>
+              } />
+              <Route path="/product/:slug" element={
+                <ProtectedRoute>
+                  <ProductDetails />
+                </ProtectedRoute>
+              } />
+              <Route path="/cart" element={
+                <ProtectedRoute>
+                  <Cart />
+                </ProtectedRoute>
+              } />
+              <Route path="/checkout" element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              } />
+              
+              {/* Admin Only Route */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute requireAdmin={true}>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
             </Routes>
           </main>
           <Footer />

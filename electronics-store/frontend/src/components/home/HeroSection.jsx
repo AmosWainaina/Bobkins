@@ -78,7 +78,7 @@ const HeroSection = ({ isLoading }) => {
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">Flash Banner</div>
-                    <div className="text-2xl font-bold dark:text-white">Up to 10% OFF</div>
+                    <div className="text-2xl font-bold dark:text-white">Up to 20% OFF</div>
                   </div>
                   <div className="px-4 py-2 rounded-full bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 font-semibold">
                     Limited Time
