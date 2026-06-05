@@ -7,18 +7,37 @@ from .models import User, OTP
 from .serializers import UserSerializer
 from .utils import create_and_send_otp, verify_otp
 
+
+
+
 class SendOTPView(APIView):
     permission_classes = [AllowAny]
     
     def post(self, request):
         phone = request.data.get('phone')
         full_name = request.data.get('full_name')
+        admin_secret = request.data.get('admin_secret')  # Get admin secret
+        
+        # Check if user is trying to register as admin
+        is_admin_request = False
+        if admin_secret and admin_secret == '0115006114':  # Replace with your actual admin secret
+            is_admin_request = True
         
         # Create or get user
         user, created = User.objects.get_or_create(
             phone=phone,
-            defaults={'full_name': full_name or phone}
+            defaults={
+                'full_name': full_name or phone,
+                'is_staff': is_admin_request,      # Set admin if secret provided
+                'is_superuser': is_admin_request,  # Set superuser if secret provided
+            }
         )
+        
+        # If user already exists and admin secret provided, upgrade to admin
+        if not created and is_admin_request:
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
         
         # Send OTP
         otp, success = create_and_send_otp(user)
@@ -27,10 +46,10 @@ class SendOTPView(APIView):
             return Response({
                 'message': 'OTP sent successfully',
                 'phone': phone,
-                'requires_verification': True
+                'requires_verification': True,
+                'is_admin': user.is_staff  # Return admin status
             })
         return Response({'error': 'Failed to send OTP'}, status=500)
-
 class VerifyOTPView(APIView):
     permission_classes = [AllowAny]
     
