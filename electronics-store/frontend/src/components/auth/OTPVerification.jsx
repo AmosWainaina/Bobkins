@@ -38,52 +38,58 @@ const OTPVerification = () => {
 
   const handleVerify = async (e) => {
     e.preventDefault();
-    
+
     if (!phone) {
       toast.error('Phone number is required');
       return;
     }
-    
+
     if (!otp || otp.length < 4) {
       toast.error('Please enter a valid OTP');
       return;
     }
-    
+
     setLoading(true);
     try {
-      const res = await apiClient.post('/accounts/otp/verify/', { 
-        phone, 
-        otp_code: otp 
+      const res = await apiClient.post('/accounts/otp/verify/', {
+        phone,
+        otp_code: otp,
       });
-      
+
       const { access, refresh, user } = res.data;
-      
-      // Save user + tokens
+
+      // DEBUG: Log what the backend actually returns
+      console.log('=== BACKEND RESPONSE ===');
+      console.log('Full response:', res.data);
+      console.log('User object:', user);
+      console.log('is_staff:', user?.is_staff);
+      console.log('is_superuser:', user?.is_superuser);
+      console.log('========================');
+
+      // Save user + tokens to Redux and localStorage
       const payload = { access, refresh, user };
       dispatch(setUser(payload));
-      localStorage.setItem('user', JSON.stringify(payload));
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
-      
+
       toast.success('Login successful! Welcome back.');
-      
-      // ROLE-BASED REDIRECTION
-      // Check if user is admin/staff
-      const isAdmin = user?.is_staff === true || 
-                      user?.role === 'admin' || 
+
+      // Determine admin status from returned user object
+      const isAdmin = user?.is_staff === true ||
+                      user?.role === 'admin' ||
                       user?.is_superuser === true ||
                       user?.user_type === 'admin';
-      
+
+      console.log('Is admin determined?', isAdmin);
+
+      // Navigate after state/tokens are set
       if (isAdmin) {
-        // Admin goes to dashboard
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       } else {
-        // Regular user goes to shop
-        navigate('/shop');
+        navigate('/shop', { replace: true });
       }
     } catch (err) {
       console.error(err);
-      // Handle specific error cases
       if (err.response?.status === 403) {
         toast.error('Access denied. You do not have permission to login.');
       } else {

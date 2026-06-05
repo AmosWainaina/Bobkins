@@ -28,6 +28,7 @@ const Navbar = () => {
                   user?.role === 'admin' || 
                   user?.is_superuser === true ||
                   user?.user_type === 'admin';
+  console.log('Navbar - Is Admin:', isAdmin);
 
   const handleLogout = () => {
     dispatch(clearUser());

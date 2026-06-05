@@ -7,7 +7,7 @@ import { API_URL } from '../services/api';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { FiPackage, FiUsers, FiShoppingBag, FiDollarSign, FiRefreshCw, FiTrendingUp, FiTruck, FiCheckCircle } from 'react-icons/fi';
+import { FiPackage, FiUsers, FiShoppingBag, FiDollarSign, FiRefreshCw, FiTrendingUp } from 'react-icons/fi';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
@@ -28,22 +28,43 @@ const AdminDashboard = () => {
   const { isAuthenticated, user, accessToken } = useSelector((state) => state.auth);
   const navigate = useNavigate();
 
+  // Helper function to check if user is admin
+  const isUserAdmin = (userData) => {
+    if (!userData) return false;
+    return userData.is_staff === true || 
+           userData.is_superuser === true ||
+           userData.role === 'admin' || 
+           userData.user_type === 'admin';
+  };
+
   useEffect(() => {
-    // Check if user is admin
-    const isAdmin = user?.is_staff === true || 
-                    user?.role === 'admin' || 
-                    user?.is_superuser === true ||
-                    user?.user_type === 'admin';
+    // Debug logging
+    console.log('=== AdminDashboard Debug ===');
+    console.log('isAuthenticated:', isAuthenticated);
+    console.log('User object:', user);
+    console.log('user?.is_staff:', user?.is_staff);
+    console.log('user?.is_superuser:', user?.is_superuser);
+    console.log('Is Admin check:', isUserAdmin(user));
+    console.log('===========================');
     
+    // Check authentication
     if (!isAuthenticated) {
       toast.error('Please login to access admin dashboard');
       navigate('/login');
-    } else if (!isAdmin) {
+      return;
+    }
+    
+    // Check admin status
+    const isAdmin = isUserAdmin(user);
+    
+    if (!isAdmin) {
       toast.error('Access denied. Admin privileges required.');
       navigate('/shop');
-    } else {
-      fetchDashboardData();
+      return;
     }
+    
+    // If admin, fetch data
+    fetchDashboardData();
   }, [isAuthenticated, user, navigate]);
 
   const fetchDashboardData = async () => {
@@ -75,7 +96,7 @@ const AdminDashboard = () => {
         toast.error('Access denied. Admin privileges required.');
         navigate('/shop');
       } else {
-        toast.error('Failed to load dashboard data');
+        toast.error('Failed to load dashboard data. Using mock data.');
         // Set mock data for development
         setStats({
           totalSales: 125430,
@@ -85,9 +106,9 @@ const AdminDashboard = () => {
           pendingOrders: 23,
           completedOrders: 319,
           recentOrders: [
-            { id: 'ORD-001', user_name: 'John Doe', total: 2450, status: 'pending', created_at: '2024-01-15' },
-            { id: 'ORD-002', user_name: 'Jane Smith', total: 1890, status: 'processing', created_at: '2024-01-14' },
-            { id: 'ORD-003', user_name: 'Mike Johnson', total: 3200, status: 'shipped', created_at: '2024-01-13' },
+            { id: 'ORD-001', user_name: 'John Doe', total: 2450, status: 'pending', created_at: new Date().toISOString() },
+            { id: 'ORD-002', user_name: 'Jane Smith', total: 1890, status: 'processing', created_at: new Date().toISOString() },
+            { id: 'ORD-003', user_name: 'Mike Johnson', total: 3200, status: 'shipped', created_at: new Date().toISOString() },
           ],
           salesData: {
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
@@ -112,26 +133,11 @@ const AdminDashboard = () => {
     toast.success('Dashboard refreshed!');
   };
 
-  const handleOrderStatusChange = async (orderId, newStatus) => {
-    try {
-      const token = accessToken || localStorage.getItem('access_token');
-      await axios.patch(`${API_URL}/orders/${orderId}/`, 
-        { status: newStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(`Order ${orderId} status updated to ${newStatus}`);
-      fetchDashboardData(); // Refresh data
-    } catch (error) {
-      console.error('Error updating order:', error);
-      toast.error('Failed to update order status');
-    }
-  };
-
   const salesChartData = {
     labels: stats.salesData.labels,
     datasets: [
       {
-        label: 'Sales (Ksh)',
+        label: 'Sales (KES)',
         data: stats.salesData.data,
         borderColor: 'rgb(59, 130, 246)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -312,17 +318,9 @@ const AdminDashboard = () => {
                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{order.user_name}</td>
                   <td className="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">KES {order.total.toLocaleString()}</td>
                   <td className="px-4 py-3">
-                    <select
-                      value={order.status}
-                      onChange={(e) => handleOrderStatusChange(order.id, e.target.value)}
-                      className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(order.status)} border-0 cursor-pointer`}
-                    >
-                      <option value="pending">Pending</option>
-                      <option value="processing">Processing</option>
-                      <option value="shipped">Shipped</option>
-                      <option value="delivered">Delivered</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(order.status)}`}>
+                      {order.status}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
                     {new Date(order.created_at).toLocaleDateString()}
