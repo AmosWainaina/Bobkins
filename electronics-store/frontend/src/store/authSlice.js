@@ -1,4 +1,4 @@
-// store/authSlice.js
+
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
@@ -14,14 +14,23 @@ const authSlice = createSlice({
   reducers: {
     setUser(state, action) {
       const { user, access, refresh } = action.payload;
-      state.user = user;
+      
+      // Ensure we store the COMPLETE user object
+      state.user = {
+        ...user,  // Spread all user properties
+        is_staff: user.is_staff || false,
+        is_superuser: user.is_superuser || false,
+      };
       state.accessToken = access;
       state.refreshToken = refresh;
       state.isAuthenticated = true;
       
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('user', JSON.stringify(state.user));
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
+      
+      // Debug log
+      console.log('User saved to Redux:', state.user);
     },
     clearUser(state) {
       state.user = null;
@@ -33,12 +42,8 @@ const authSlice = createSlice({
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
     },
-    updateUser(state, action) {
-      state.user = { ...state.user, ...action.payload };
-      localStorage.setItem('user', JSON.stringify(state.user));
-    },
   },
 });
 
-export const { setUser, clearUser, updateUser } = authSlice.actions;
+export const { setUser, clearUser } = authSlice.actions;
 export default authSlice.reducer;

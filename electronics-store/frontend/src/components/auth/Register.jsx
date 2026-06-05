@@ -1,17 +1,18 @@
+
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { FiUser, FiSmartphone, FiUserPlus } from "react-icons/fi";
+import { FiUser, FiSmartphone, FiUserPlus, FiKey } from "react-icons/fi";
 import { apiClient } from "../../services/api";
-
-
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     full_name: "",
-    phone: ""
+    phone: "",
+    admin_secret: ""
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showAdminField, setShowAdminField] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -43,14 +44,27 @@ const RegisterPage = () => {
     setIsLoading(true);
 
     try {
-      const res = await apiClient.post('/accounts/otp/send/', { 
+      // Include admin secret if provided
+      const payload = { 
         phone: formData.phone, 
         full_name: formData.full_name 
-      });
+      };
+      
+      if (showAdminField && formData.admin_secret === "0115006114") {
+        payload.is_admin = true;
+      }
+      
+      const res = await apiClient.post('/accounts/otp/send/', payload);
       
       if (res.data?.requires_verification) {
         toast.success('OTP sent successfully!');
-        navigate('/verify-otp', { state: { phone: formData.phone, full_name: formData.full_name } });
+        navigate('/verify-otp', { 
+          state: { 
+            phone: formData.phone, 
+            full_name: formData.full_name,
+            is_admin: payload.is_admin || false
+          } 
+        });
       } else {
         toast.error('Failed to send OTP. Please try again.');
       }
@@ -61,6 +75,66 @@ const RegisterPage = () => {
       setIsLoading(false);
     }
   };
+
+  // OTPVerification.jsx - Updated handleVerify function
+const handleVerify = async (e) => {
+  e.preventDefault();
+  
+  if (!phone) {
+    toast.error('Phone number is required');
+    return;
+  }
+  
+  if (!otp || otp.length < 4) {
+    toast.error('Please enter a valid OTP');
+    return;
+  }
+  
+  setLoading(true);
+  try {
+    const res = await apiClient.post('/accounts/otp/verify/', { 
+      phone, 
+      otp_code: otp 
+    });
+    
+    const { access, refresh, user } = res.data;
+    
+    console.log('User data from backend:', user);
+    console.log('is_staff:', user.is_staff);
+    console.log('is_superuser:', user.is_superuser);
+    
+    // Save user + tokens
+    const payload = { access, refresh, user };
+    dispatch(setUser(payload));
+    localStorage.setItem('user', JSON.stringify(payload));
+    localStorage.setItem('access_token', access);
+    localStorage.setItem('refresh_token', refresh);
+    
+    toast.success('Login successful!');
+    
+    // Check admin status
+    const isAdmin = user?.is_staff === true || user?.is_superuser === true;
+    
+    console.log('Is Admin?', isAdmin);
+    
+    // Use setTimeout to ensure state is updated before redirect
+    setTimeout(() => {
+      if (isAdmin) {
+        console.log('Redirecting to /dashboard');
+        navigate('/dashboard');
+      } else {
+        console.log('Redirecting to /shop');
+        navigate('/shop');
+      }
+    }, 100);
+    
+  } catch (err) {
+    console.error(err);
+    toast.error(err.response?.data?.error || 'Invalid OTP. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -116,6 +190,42 @@ const RegisterPage = () => {
                 We'll send a verification code to this number
               </p>
             </div>
+
+            {/* Optional Admin Registration */}
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setShowAdminField(!showAdminField)}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                {showAdminField ? "Hide" : "Register as Admin?"}
+              </button>
+            </div>
+
+            {showAdminField && (
+              <div>
+                <label htmlFor="admin_secret" className="block text-sm font-medium text-gray-700 mb-2">
+                  Admin Secret Key
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FiKey className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="admin_secret"
+                    name="admin_secret"
+                    type="password"
+                    value={formData.admin_secret}
+                    onChange={handleChange}
+                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
+                    placeholder="Enter admin secret key"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Contact system admin for the secret key
+                </p>
+              </div>
+            )}
 
             <button
               type="submit"
