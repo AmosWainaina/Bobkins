@@ -85,7 +85,18 @@ const AdminDashboard = () => {
         },
       });
       
-      setStats(response.data);
+      setStats((prevStats) => ({
+        ...prevStats,
+        ...response.data,
+        salesData: {
+          ...prevStats.salesData,
+          ...(response.data.salesData || {}),
+        },
+        topProducts: response.data.topProducts || prevStats.topProducts,
+        recentOrders: response.data.recentOrders || prevStats.recentOrders,
+        pendingOrders: response.data.pendingOrders ?? prevStats.pendingOrders,
+        completedOrders: response.data.completedOrders ?? prevStats.completedOrders,
+      }));
     } catch (error) {
       console.error('Error fetching dashboard:', error);
       
